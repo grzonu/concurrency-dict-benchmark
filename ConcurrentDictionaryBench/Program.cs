@@ -42,6 +42,19 @@ namespace ConcurrentDictionaryBench
 
             return sum;
         }
+        
+        [Benchmark]
+        public long IterateWithWhereViaValues()
+        {
+            long sum = 0;
+
+            foreach (var value in _dict.Where(x => x.Value % 2 == 0).Select(x => x.Value))
+            {
+                sum += value;
+            }
+
+            return sum;
+        }
 
         [Benchmark]
         public long IterateViaEnumerator()
@@ -69,6 +82,25 @@ namespace ConcurrentDictionaryBench
                     long sum = 0;
 
                     foreach (var value in _dict.Values.Where(x => x % 2 == 0))
+                    {
+                        sum += value;
+                    }
+
+                    return sum;
+                }));
+            var total = (await Task.WhenAll(tasks)).Sum();
+            return total;
+        }
+        
+        [Benchmark]
+        public async Task<long> IterateParallelWithWhereViaValues()
+        {
+            var tasks = Enumerable.Range(0, 2)
+                .Select(x => Task.Run(() =>
+                {
+                    long sum = 0;
+
+                    foreach (var value in _dict.Where(x => x.Value % 2 == 0).Select(x => x.Value))
                     {
                         sum += value;
                     }
